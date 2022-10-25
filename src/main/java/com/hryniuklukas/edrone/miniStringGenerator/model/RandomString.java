@@ -10,7 +10,6 @@ import javax.persistence.*;
 @Entity
 @Getter
 @Setter
-@AllArgsConstructor
 @NoArgsConstructor
 @Table(name = "generatedStrings")
 public class RandomString {
@@ -20,4 +19,9 @@ public class RandomString {
     @ManyToOne(fetch = FetchType.LAZY)
     private UserRequest request;
     private String content;
+    public RandomString(UserRequest request, String content){
+        this.request = request;
+        this.content=content;
+
+    }
 }

@@ -6,7 +6,9 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 
 @Entity
@@ -24,11 +26,16 @@ public class UserRequest {
             cascade = CascadeType.ALL,
             orphanRemoval = true
     )
-    private List<RandomString> stringList;
+    private Set<RandomString> stringSet = new HashSet<>();
 
-    private char[] charSet;
+    private String charSet;
     private int minLength;
     private int maxLength;
     private int numberOfStringsRequested;
+
+    public void setRandomStringSet(Set<String> randomStrings){
+        randomStrings.forEach(string -> stringSet.add(new RandomString(this, string)));
+    }
+
 
 }

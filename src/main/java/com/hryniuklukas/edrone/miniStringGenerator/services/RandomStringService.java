@@ -3,58 +3,99 @@ package com.hryniuklukas.edrone.miniStringGenerator.services;
 import com.hryniuklukas.edrone.miniStringGenerator.model.RandomString;
 import com.hryniuklukas.edrone.miniStringGenerator.model.UserRequest;
 import com.hryniuklukas.edrone.miniStringGenerator.repos.RandomStringRepo;
-import lombok.AllArgsConstructor;
+import com.hryniuklukas.edrone.miniStringGenerator.repos.UserRequestRepo;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
-import java.util.ArrayList;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Stream;
 
-@AllArgsConstructor
 @Service
 public class RandomStringService {
-    private final RandomStringRepo randomStringRepo;
+  private final RandomStringRepo randomStringRepo;
+  private final Random rand;
+  private final UserRequestRepo userRequestRepo;
+  private int iterationsCounterMetric;
 
-    public List<RandomString> generateStringsBasedOnRequest(UserRequest userRequest){
-        char[] charSet = userRequest.getCharSet();
-        int minLength = userRequest.getMinLength();
-        int maxLength = userRequest.getMaxLength();
-        int numberRequested = userRequest.getNumberOfStringsRequested();
+  @Autowired
+  RandomStringService(RandomStringRepo randomStringRepo, UserRequestRepo userRequestRepo) {
+    this.randomStringRepo = randomStringRepo;
+    this.userRequestRepo = userRequestRepo;
+    rand = new Random();
+  }
 
+//  public List<String> generateAllStrings(int length, String charset) {
+//    return generateAllPossibleStrings(length, charset.toCharArray(), "", charset.length());
+//  }
+//
+//  private List<String> generateAllPossibleStrings(
+//      int length, char[] charset, String prefix, int setLength) {
+//    List<String> output = new ArrayList<>();
+//    if (length == 0) {
+//      output.add(prefix);
+//      return output;
+//    }
+//
+//    for (int i = 0; i < setLength; ++i) {
+//
+//      String newPrefix = prefix + charset[i];
+//
+//      output =
+//          Stream.concat(
+//                  output.stream(),
+//                  generateAllPossibleStrings(length - 1, charset, newPrefix, setLength).stream())
+//              .toList();
+//    }
+//    return output;
+//  }
 
-        return null;
+  public Set<String> startStringGenerationJob(UserRequest request) {
+            int minLength = request.getMinLength();
+            int maxLength = request.getMaxLength();
+            String charset = request.getCharSet();
+            int amount = request.getNumberOfStringsRequested();
+
+    iterationsCounterMetric=0;
+    Set<String> output = new HashSet<>();
+    int currentToGenerate;
+    int alreadyGenerated = 0;
+    for (int stringLength = minLength; stringLength <= maxLength; stringLength++) {
+      if (stringLength == maxLength) {
+        currentToGenerate = amount - alreadyGenerated;
+      } else {
+        currentToGenerate = rand.nextInt(amount - alreadyGenerated);
+      }
+      alreadyGenerated += currentToGenerate;
+      output.addAll(getRandomStringsSet(stringLength, charset, currentToGenerate));
+      System.out.println("Length: " + stringLength + "number generated: " + currentToGenerate);
     }
-    public List<String> generateAllStrings(int length, String charset){
-        return generateAllPossibleStrings(length, charset.toCharArray(), "", charset.length());
+    System.out.println("Iterations required: "+ iterationsCounterMetric + " Strings requested: " + amount);
+    request.setRandomStringSet(output);
+    userRequestRepo.save(request);
+    return output;
+  }
+
+  private Set<String> getRandomStringsSet(int length, String charset, int amount) {
+    Set<String> output = new HashSet<>();
+    int charsetLength = charset.length();
+    do {
+      StringBuilder stringBuilder = new StringBuilder(length);
+      for (int i = 0; i < length; i++) {
+        int randomizedIndex = rand.nextInt(charsetLength);
+        stringBuilder.append(charset.charAt(randomizedIndex));
+      }
+      output.add(stringBuilder.toString());
+      iterationsCounterMetric++;
+    } while (output.size() < amount);
+    return output;
+  }
+
+  public int possibleNumberOfStrings(int minLength, int maxLength, String tempCharSet) {
+    int possibleNumber = 0;
+    int possibleChars = tempCharSet.length();
+    for (int i = minLength; i <= maxLength; i++) {
+      possibleNumber += possibleChars ^ i;
     }
-
-    private List<String> generateAllPossibleStrings(int length, char[] charset, String prefix, int setLength){
-        List<String> output = new ArrayList<String>();
-        if (length == 0)
-        {
-            output.add(prefix);
-            return output;
-        }
-
-        for (int i = 0; i < setLength; ++i)
-        {
-
-            String newPrefix = prefix + charset[i];
-
-            output = Stream.concat(
-                    output.stream(),
-                    generateAllPossibleStrings(length - 1,charset, newPrefix, setLength).stream())
-                    .toList();
-        }
-        return output;
-    }
-
-    public int possibleNumberOfStrings(int minLength, int maxLength, String tempCharSet){
-        int possibleNumber = 0;
-        int possibleChars = tempCharSet.length();
-        for(int i = minLength; i<=maxLength; i++){
-            possibleNumber+=possibleChars^i;
-        }
-        return possibleNumber;
-    }
+    return possibleNumber;
+  }
 }

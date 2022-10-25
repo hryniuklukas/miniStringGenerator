@@ -14,7 +14,9 @@ import javax.persistence.*;
 @NoArgsConstructor
 @Table(name = "generatedStrings")
 public class RandomString {
-    private @Id @GeneratedValue(strategy = GenerationType.IDENTITY)Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     @ManyToOne(fetch = FetchType.LAZY)
     private UserRequest request;
     private String content;

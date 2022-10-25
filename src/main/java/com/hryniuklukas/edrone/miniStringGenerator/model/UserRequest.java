@@ -16,7 +16,9 @@ import java.util.List;
 @NoArgsConstructor
 @Table(name = "userRequests")
 public class UserRequest {
-    private static @Id @GeneratedValue(strategy = GenerationType.IDENTITY)Long id;
+    @Id
+    @GeneratedValue(strategy = GenerationType.IDENTITY)
+    private Long id;
     @OneToMany(
             mappedBy = "request",
             cascade = CascadeType.ALL,
@@ -24,7 +26,7 @@ public class UserRequest {
     )
     private List<RandomString> stringList;
 
-    private String charSet;
+    private char[] charSet;
     private int minLength;
     private int maxLength;
     private int numberOfStringsRequested;

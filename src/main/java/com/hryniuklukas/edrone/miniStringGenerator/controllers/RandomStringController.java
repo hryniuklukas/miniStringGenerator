@@ -9,6 +9,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 import java.util.Set;
+import java.util.concurrent.ExecutionException;
 
 @RestController
 @AllArgsConstructor
@@ -17,7 +18,7 @@ public class RandomStringController {
   private final RandomStringService randomStringService;
 
   @GetMapping
-  public Set<String> generateGivenAmountOfStrings(@RequestBody UserRequest request) {
-    return randomStringService.startStringGenerationJob(request);
+  public Set<String> generateGivenAmountOfStrings(@RequestBody UserRequest request) throws ExecutionException, InterruptedException {
+    return randomStringService.orchestrateJob(request).get();
   }
 }

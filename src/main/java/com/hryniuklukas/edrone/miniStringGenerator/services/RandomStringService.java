@@ -1,20 +1,23 @@
 package com.hryniuklukas.edrone.miniStringGenerator.services;
 
-import com.hryniuklukas.edrone.miniStringGenerator.model.RandomString;
 import com.hryniuklukas.edrone.miniStringGenerator.model.UserRequest;
 import com.hryniuklukas.edrone.miniStringGenerator.repos.RandomStringRepo;
 import com.hryniuklukas.edrone.miniStringGenerator.repos.UserRequestRepo;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.util.*;
-import java.util.stream.Stream;
+import java.util.concurrent.CompletableFuture;
 
 @Service
 public class RandomStringService {
   private final RandomStringRepo randomStringRepo;
   private final Random rand;
   private final UserRequestRepo userRequestRepo;
+  Logger logger = LoggerFactory.getLogger(RandomStringService.class);
   private int iterationsCounterMetric;
 
   @Autowired
@@ -24,38 +27,47 @@ public class RandomStringService {
     rand = new Random();
   }
 
-//  public List<String> generateAllStrings(int length, String charset) {
-//    return generateAllPossibleStrings(length, charset.toCharArray(), "", charset.length());
-//  }
-//
-//  private List<String> generateAllPossibleStrings(
-//      int length, char[] charset, String prefix, int setLength) {
-//    List<String> output = new ArrayList<>();
-//    if (length == 0) {
-//      output.add(prefix);
-//      return output;
-//    }
-//
-//    for (int i = 0; i < setLength; ++i) {
-//
-//      String newPrefix = prefix + charset[i];
-//
-//      output =
-//          Stream.concat(
-//                  output.stream(),
-//                  generateAllPossibleStrings(length - 1, charset, newPrefix, setLength).stream())
-//              .toList();
-//    }
-//    return output;
-//  }
+  //  public List<String> generateAllStrings(int length, String charset) {
+  //    return generateAllPossibleStrings(length, charset.toCharArray(), "", charset.length());
+  //  }
+  //
+  //  private List<String> generateAllPossibleStrings(
+  //      int length, char[] charset, String prefix, int setLength) {
+  //    List<String> output = new ArrayList<>();
+  //    if (length == 0) {
+  //      output.add(prefix);
+  //      return output;
+  //    }
+  //
+  //    for (int i = 0; i < setLength; ++i) {
+  //
+  //      String newPrefix = prefix + charset[i];
+  //
+  //      output =
+  //          Stream.concat(
+  //                  output.stream(),
+  //                  generateAllPossibleStrings(length - 1, charset, newPrefix,
+  // setLength).stream())
+  //              .toList();
+  //    }
+  //    return output;
+  //  }
+  public CompletableFuture<Set<String>> orchestrateJob(UserRequest request) {
+    try {
+      return startStringGenerationJob(request);
+    } catch (Exception e) {
+      return CompletableFuture.failedFuture(e);
+    }
+  }
 
-  public Set<String> startStringGenerationJob(UserRequest request) {
-            int minLength = request.getMinLength();
-            int maxLength = request.getMaxLength();
-            String charset = request.getCharSet();
-            int amount = request.getNumberOfStringsRequested();
+  @Async
+  public CompletableFuture<Set<String>> startStringGenerationJob(UserRequest request) {
+    int minLength = request.getMinLength();
+    int maxLength = request.getMaxLength();
+    String charset = request.getCharSet();
+    int amount = request.getNumberOfStringsRequested();
 
-    iterationsCounterMetric=0;
+    iterationsCounterMetric = 0;
     Set<String> output = new HashSet<>();
     int currentToGenerate;
     int alreadyGenerated = 0;
@@ -67,12 +79,12 @@ public class RandomStringService {
       }
       alreadyGenerated += currentToGenerate;
       output.addAll(getRandomStringsSet(stringLength, charset, currentToGenerate));
-      System.out.println("Length: " + stringLength + "number generated: " + currentToGenerate);
+      logger.info("Length: {} Number generated: {} ",stringLength, currentToGenerate);
     }
-    System.out.println("Iterations required: "+ iterationsCounterMetric + " Strings requested: " + amount);
+    logger.info("Iterations required: {}, Strings requested: {}", iterationsCounterMetric, amount);
     request.setRandomStringSet(output);
     userRequestRepo.save(request);
-    return output;
+    return CompletableFuture.completedFuture(output);
   }
 
   private Set<String> getRandomStringsSet(int length, String charset, int amount) {

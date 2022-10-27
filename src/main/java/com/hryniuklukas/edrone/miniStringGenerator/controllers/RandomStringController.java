@@ -31,4 +31,8 @@ public class RandomStringController {
   public List<String> getAllCurrentlyRunning(){
     return jobDelegationService.getAllRunningJobs();
   }
+  @GetMapping("/running/count")
+  public int getNumberOfRunningJobs(){
+    return jobDelegationService.getNumberOfJobsRunning();
+  }
 }

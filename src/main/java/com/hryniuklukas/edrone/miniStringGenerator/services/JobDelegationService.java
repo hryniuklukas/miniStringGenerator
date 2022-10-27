@@ -7,7 +7,6 @@ import com.hryniuklukas.edrone.miniStringGenerator.repos.UserRequestRepo;
 import lombok.AllArgsConstructor;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
-
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -26,6 +25,7 @@ public class JobDelegationService {
       try {
         randomStringService.startStringGenerationJob(request);
       } catch (InterruptedException e) {
+        Thread.currentThread().interrupt();
         System.out.println("Interrupted Exception");
       }
       return request.getId();
@@ -53,5 +53,9 @@ public class JobDelegationService {
     Optional<List<UserRequest>> queriedListOfRequests = userRequestRepo.findAllByJobStatus(JobStatus.RUNNING);
     queriedListOfRequests.ifPresent(userRequests -> userRequests.forEach(userRequest -> jobsList.add(userRequest.getId().toString())));
     return jobsList;
+  }
+  @Transactional
+  public int getNumberOfJobsRunning(){
+    return userRequestRepo.findAllByJobStatus(JobStatus.RUNNING).map(List::size).orElse(0);
   }
 }

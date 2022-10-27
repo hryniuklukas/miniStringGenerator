@@ -6,8 +6,8 @@ import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 import javax.persistence.*;
+
 import java.util.HashSet;
-import java.util.List;
 import java.util.Set;
 
 
@@ -21,21 +21,33 @@ public class UserRequest {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
-    @OneToMany(
-            mappedBy = "request",
-            cascade = CascadeType.ALL,
-            orphanRemoval = true
-    )
-    private Set<RandomString> stringSet = new HashSet<>();
+    @Transient
+    private Set<String> stringSet = new HashSet<>();
 
+    @Lob
+    private String documentTxt="";
+
+    @Enumerated(EnumType.STRING)
+    private JobStatus jobStatus;
     private String charSet;
     private int minLength;
     private int maxLength;
     private int numberOfStringsRequested;
 
-    public void setRandomStringSet(Set<String> randomStrings){
-        randomStrings.forEach(string -> stringSet.add(new RandomString(this, string)));
+
+    public void setStatusAsRunning(){
+        this.jobStatus = JobStatus.RUNNING;
     }
-
-
+    public void setStatusAsFinished(){
+        this.jobStatus = JobStatus.FINISHED;
+    }
+    public void setRandomStringSet(Set<String> randomStrings){
+        this.stringSet = randomStrings;
+    }
+    public void generateDocumentTxt(){
+        stringSet.forEach(this::concatStringToTxt);
+    }
+    public void concatStringToTxt(String s){
+        this.documentTxt = documentTxt.concat(s + "\n");
+    }
 }

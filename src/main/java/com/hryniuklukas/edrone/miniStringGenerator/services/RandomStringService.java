@@ -23,7 +23,7 @@ public class RandomStringService {
     rand = new Random();
   }
   @Async
-  public void startStringGenerationJob(UserRequest request) throws InterruptedException {
+  public void startStringGenerationJob(UserRequest request){
     int minLength = request.getMinLength();
     int maxLength = request.getMaxLength();
     String charset = request.getCharSet();
@@ -45,7 +45,6 @@ public class RandomStringService {
     request.setRandomStringSet(output);
     request.generateDocumentTxt();
     request.setStatusAsFinished();
-    Thread.sleep(15000); //For test purposes
     userRequestRepo.save(request);
   }
 
@@ -78,7 +77,7 @@ public class RandomStringService {
     int maxLength = request.getMaxLength();
 
     for (int i = minLength; i <= maxLength; i++) {
-      possibleNumber += possibleChars ^ i;
+      possibleNumber+=Math.pow(possibleChars,i);
     }
     return possibleNumber;
   }

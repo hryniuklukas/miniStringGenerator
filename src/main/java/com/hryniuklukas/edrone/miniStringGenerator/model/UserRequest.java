@@ -23,6 +23,7 @@ public class UserRequest {
 
   @Lob private String documentTxt = "";
 
+  @Transient private StringBuilder builder = new StringBuilder();
   @Enumerated(EnumType.STRING)
   private JobStatus jobStatus;
 
@@ -31,6 +32,12 @@ public class UserRequest {
   private int maxLength;
   private int numberOfStringsRequested;
 
+  public UserRequest(int minLength, int maxLength, int numberOfStringsRequested, String charSet){
+    this.minLength=minLength;
+    this.maxLength=maxLength;
+    this.numberOfStringsRequested=numberOfStringsRequested;
+    this.charSet=charSet;
+  }
   public void setStatusAsRunning() {
     this.jobStatus = JobStatus.RUNNING;
   }
@@ -45,9 +52,10 @@ public class UserRequest {
 
   public void generateDocumentTxt() {
     stringSet.forEach(this::concatStringToTxt);
+    this.documentTxt = builder.toString();
   }
 
   public void concatStringToTxt(String s) {
-    this.documentTxt = documentTxt.concat(s + "\n");
+    builder.append(s).append("\n");
   }
 }
